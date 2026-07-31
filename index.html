@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>秋招雷达 · 2027届</title>
+<style>
+  :root { --bg:#0f1420; --card:#171e2e; --line:#28324a; --txt:#dbe4f5; --dim:#8b98b5;
+          --acc:#4c8dff; --red:#ff5d5d; --green:#3ecf8e; --amber:#ffb84d; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.6 "Microsoft YaHei",system-ui,sans-serif; }
+  .wrap { max-width:1280px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:20px; margin:6px 0 2px; } h1 small{ color:var(--dim); font-weight:400; font-size:13px; margin-left:10px;}
+  h2 { font-size:15px; margin:26px 0 10px; padding-left:9px; border-left:3px solid var(--acc); }
+  h2.red{ border-color:var(--red);} h2.amber{ border-color:var(--amber);} h2.green{ border-color:var(--green);}
+  .chips { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
+  .chip { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 13px; font-size:13px; }
+  .chip b { font-size:16px; margin-right:4px; }
+  .chip.red b{color:var(--red);} .chip.green b{color:var(--green);} .chip.amber b{color:var(--amber);} .chip.blue b{color:var(--acc);}
+  .btns { display:flex; gap:10px; margin:8px 0; flex-wrap:wrap; }
+  a.btn { background:var(--acc); color:#fff; border-radius:7px; padding:8px 16px; font-size:13px; text-decoration:none; }
+  a.btn.ghost { background:transparent; border:1px solid var(--line); color:var(--dim); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th,td { padding:9px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px;}
+  th { color:var(--dim); font-weight:500; background:#131a29; white-space:nowrap; }
+  tr:last-child td{ border-bottom:0; }
+  .co { font-weight:600; } .prog{ color:var(--dim); font-size:12px; }
+  .tag { display:inline-block; border-radius:4px; padding:1px 7px; font-size:11px; margin-right:4px; }
+  .t-jg{background:#3a2020;color:#ff9c9c;} .t-g{background:#203a2b;color:#7fe0ae;}
+  .t-z{background:#33301c;color:#ffd98a;} .t-mail{background:#1d2c4a;color:#9dc1ff;}
+  .pr { font-weight:700; color:var(--acc); }
+  .ddl-urgent{ color:var(--red); font-weight:700;} .ddl-soon{ color:var(--amber); font-weight:600;}
+  a { color:var(--acc); text-decoration:none; } a:hover{ text-decoration:underline; }
+  .empty { color:var(--dim); padding:14px; background:var(--card); border:1px dashed var(--line); border-radius:10px; }
+  .foot { margin-top:34px; color:var(--dim); font-size:12px; border-top:1px solid var(--line); padding-top:12px; }
+  details summary { cursor:pointer; color:var(--dim); margin:18px 0 8px; }
+  #lock { max-width:380px; margin:120px auto; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:28px; text-align:center; }
+  #lock input { width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:#0a0e18; color:var(--txt); margin:14px 0; font-size:15px; text-align:center;}
+  #lock button { width:100%; background:var(--acc); color:#fff; border:0; border-radius:8px; padding:10px; font-size:15px; cursor:pointer; }
+  #err { color:var(--red); font-size:13px; min-height:18px; }
+</style>
+</head>
+<body>
+<div id="lock">
+  <h2 style="border:0;padding:0;">秋招雷达 · 访问口令</h2>
+  <p style="color:var(--dim);font-size:13px">数据经 AES-256-GCM 加密发布，口令仅在您的浏览器本地用于解密</p>
+  <input id="pw" type="password" placeholder="请输入访问口令" onkeydown="if(event.key==='Enter')unlock()">
+  <div id="err"></div>
+  <button onclick="unlock()">解锁看板</button>
+</div>
+
+<div class="wrap" id="main" style="display:none">
+  <h1>秋招雷达 · 2027届<small>候选人：戎贤平 ｜ LLM / Agent / AI Infra ｜ 北上广深 ｜ <span id="gen"></span></small></h1>
+  <div class="chips" id="chips"></div>
+  <div class="btns">
+    <a class="btn" href="https://github.com/Mmxfq/qiuzhao-radar/actions/workflows/radar.yml" target="_blank">立即深度搜索（GitHub 页点 Run workflow）</a>
+    <a class="btn ghost" href="https://github.com/Mmxfq/qiuzhao-radar/actions/workflows/ops.yml" target="_blank">标记已投 / 确认邮投（填入行内 ID）</a>
+    <a class="btn ghost" onclick="location.reload()" style="cursor:pointer">刷新数据</a>
+  </div>
+
+  <h2 class="red">紧急 · 7 天内截止</h2><div id="urgent"></div>
+  <h2>待投递 · 按优先级</h2><div id="pending"></div>
+  <h2 class="amber">邮箱渠道 · 待人工确认 / 发送队列</h2><div id="review"></div>
+  <h2>即将开启</h2><div id="upcoming"></div>
+  <h2 class="green">邮箱投递记录</h2><div id="sent"></div>
+  <details><summary>已投递 / 已截止 / 已忽略</summary><div id="done"></div></details>
+  <details><summary>搜索运行历史</summary><div id="runs"></div></details>
+
+  <div class="foot">
+    云端引擎：GitHub Actions 每日北京时间 9:05 / 15:05 / 21:05 自动执行三轮深度搜索（多后端搜索 + 权威聚合页 + DeepSeek v4-flash 提取核验）；
+    邮箱渠道经官方级证据核实且置信度达标才自动投递（每日上限 3 封、永久去重），其余进入待人工确认。
+    操作（标记/邮投/立即搜索）在 GitHub Actions 页面完成，约 1 分钟生效。数据加密存储，口令不出浏览器。
+  </div>
+</div>
+
+<script>
+let DATA = null;
+
+function b64(s){ return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+async function decrypt(enc, password){
+  const salt = b64(enc.salt), iv = b64(enc.iv), ct = b64(enc.ct);
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations: enc.iter||200000, hash:"SHA-256"},
+    km, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function unlock(){
+  const pw = document.getElementById("pw").value.trim();
+  if(!pw) return;
+  document.getElementById("err").textContent = "";
+  try{
+    const r = await fetch("data.enc.json?_=" + Date.now());
+    if(!r.ok) throw new Error("数据文件尚未发布（等待首次运行完成）");
+    const enc = await r.json();
+    DATA = await decrypt(enc, pw);
+    localStorage.setItem("board_token", pw);
+    document.getElementById("lock").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    render();
+  }catch(e){
+    document.getElementById("err").textContent = e.message.includes("发布") ? e.message : "口令错误或数据损坏";
+  }
+}
+
+function esc(s){ return (s||"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function ddlClass(d){ if(!d) return ""; const days=(new Date(d)-new Date())/864e5;
+  if(days<=3) return "ddl-urgent"; if(days<=7) return "ddl-soon"; return ""; }
+function catTag(c){
+  if(c==="央国企"||c==="国家科研") return '<span class="tag t-g">'+c+'</span>';
+  if(c==="AI公司") return '<span class="tag t-z">'+c+'</span>';
+  return '<span class="tag t-jg">'+(c||"其他")+'</span>'; }
+function row(o){
+  const mail = o.apply_channel==="email" ? '<span class="tag t-mail">邮箱</span>' : "";
+  const link = o.apply_url ? `<a href="${esc(o.apply_url)}" target="_blank">入口</a>` : (o.email?esc(o.email):"");
+  return `<tr><td class="pr">${o.priority}</td>
+    <td><div class="co">${esc(o.company)} <span class="prog">(ID:${o.id})</span></div><div class="prog">${esc(o.program||"")}</div></td>
+    <td>${catTag(o.category)}${mail}<br><span class="prog">匹配:${esc(o.match_level||"-")} 置信:${(o.confidence||0).toFixed(2)}</span></td>
+    <td>${esc(o.positions||"")}<div class="prog">${esc(o.notes||"")}</div></td>
+    <td>${esc(o.cities||"")}</td>
+    <td class="${ddlClass(o.deadline_date)}">${esc(o.deadline_date||o.deadline_text||"滚动")}</td>
+    <td>${link}</td></tr>`;
+}
+function table(list){
+  if(!list.length) return '<div class="empty">暂无条目</div>';
+  return `<table><tr><th>优先级</th><th>公司 · 项目</th><th>类别</th><th>岗位 / 备注</th><th>城市</th><th>截止</th><th>入口</th></tr>`
+    + list.map(row).join("") + `</table>`;
+}
+function render(){
+  const os = DATA.opportunities, now = new Date();
+  const urgent = os.filter(o=>o.status==="待投递" && o.deadline_date && (new Date(o.deadline_date)-now)/864e5<=7 && (new Date(o.deadline_date)-now)/864e5>=-0.5);
+  const pending = os.filter(o=>o.status==="待投递" && !urgent.includes(o));
+  const review = os.filter(o=>["待人工确认","待发送(队列)"].includes(o.status));
+  const upcoming = os.filter(o=>o.status==="即将开启");
+  const done = os.filter(o=>["已投递","已截止","忽略"].includes(o.status));
+  const applied = os.filter(o=>o.status==="已投递");
+  document.getElementById("gen").textContent = "数据时间 " + (DATA.generated_at||"");
+  document.getElementById("chips").innerHTML = [
+    `<div class="chip blue"><b>${pending.length+urgent.length}</b>待投递</div>`,
+    `<div class="chip red"><b>${urgent.length}</b>7天内截止</div>`,
+    `<div class="chip amber"><b>${review.length}</b>待人工确认</div>`,
+    `<div class="chip green"><b>${applied.length}</b>已投递</div>`,
+    `<div class="chip"><b>${DATA.sent_today}/3</b>今日自动邮投</div>`,
+  ].join("");
+  document.getElementById("urgent").innerHTML = table(urgent);
+  document.getElementById("pending").innerHTML = table(pending);
+  document.getElementById("review").innerHTML = table(review);
+  document.getElementById("upcoming").innerHTML = table(upcoming);
+  document.getElementById("done").innerHTML = table(done);
+  document.getElementById("sent").innerHTML = DATA.sent.length ?
+    `<table><tr><th>时间</th><th>公司</th><th>收件人</th><th>主题</th><th>方式</th><th>结果</th></tr>` +
+    DATA.sent.map(s=>`<tr><td>${esc(s.sent_at)}</td><td>${esc(s.company)}</td><td>${esc(s.to_email)}</td>
+      <td title="${esc(s.body||'')}">${esc(s.subject)}</td><td>${s.mode==="auto"?"自动":"人工"}</td>
+      <td>${s.ok?'<span style="color:var(--green)">成功</span>':'<span style="color:var(--red)">失败</span>'}</td></tr>`).join("")+`</table>`
+    : '<div class="empty">暂无投递记录</div>';
+  document.getElementById("runs").innerHTML = DATA.runs.length ?
+    `<table><tr><th>触发</th><th>开始</th><th>结束</th><th>查询</th><th>新增</th><th>更新</th><th>自动投递</th><th>总结</th></tr>`+
+    DATA.runs.map(r=>`<tr><td>${esc(r.trigger)}</td><td>${esc(r.started_at)}</td><td>${esc(r.finished_at||"")}</td>
+      <td>${r.queries??""}</td><td>${r.new_items??""}</td><td>${r.updated_items??""}</td><td>${r.auto_sent??""}</td>
+      <td>${esc(r.summary||"")}</td></tr>`).join("")+`</table>`
+    : '<div class="empty">尚未运行</div>';
+}
+// 自动尝试已保存口令
+(async ()=>{
+  const saved = localStorage.getItem("board_token");
+  if(saved){ document.getElementById("pw").value = saved; unlock(); }
+})();
+setInterval(()=>{ if(DATA) location.reload(); }, 300000);
+</script>
+</body>
+</html>
